@@ -162,7 +162,7 @@ We can spin up the Flower server by:
 (venv)$ celery -A main.celery flower --port=5555
 ```
 
-And if we go to `localhost:5555`, we will see a Flower dashboard, wherece we can get much of feedback about Celery tasks.
+And if we go to `localhost:5555`, we will see a Flower dashboard, where we can get much of feedback about Celery tasks.
 
 # Application Factory
 
@@ -171,3 +171,4 @@ And if we go to `localhost:5555`, we will see a Flower dashboard, wherece we can
 ```bash
 (venv)$ alembic init alembic
 ```
+ 
