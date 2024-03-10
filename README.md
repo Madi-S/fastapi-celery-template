@@ -1,7 +1,7 @@
 # Fastapi Celery Template
 
 ```bash
-git clone https://github.com/Madi-S/fastapi-celery-template
+$ git clone https://github.com/Madi-S/fastapi-celery-template
 ```
 
 ## Why Celery?
@@ -58,3 +58,116 @@ Let's start with some terminology:
 The Celery client is the producer, which adds a new task to the queue via the message broker. Celery workers then consume new tasks from the queue, again, via the message broker. Once processed, results are then stored in the result backend.
 
 In terms of tools, RabbitMQ is arguably the better choice for a message broker since it supports AMQP (Advanced Message Queuing Protocol) while Redis is fine as your result backend.
+
+# Gettings Started
+
+## Setting up Redis
+
+You can set up and run Redis directly from your operating system or from a Docker container.
+
+### With Dcoker
+
+To download the official Redis Docker image from Docker Hub and run it on port 6379 in background:
+
+```bash
+$ docker run -p 6379:6379 --name some-redis -d redis
+```
+
+To test if Redis is up and running:
+
+```bash
+$ docker exec -it some-redis redis-cli ping
+
+PONG
+```
+
+### Without Docker
+
+Either download Redis from source or via package manager (like apt, yum, homebrew or chocolately) and then start the Redis server via:
+
+```bash
+$ redis-server
+```
+
+## Setting up Celery
+
+![Celery Workflow](static/celery_workflow.png)
+
+## Sending a Task to Celery
+
+After activating virtual environment and installing all the `requirements.txt` dependencies, we can run the following command:
+
+```bash
+(venv)$ cd project
+(venv)$ celery -A main.celery worker --loglevel=info
+```
+
+You should see something similar to this:
+
+```bash
+[config]
+    .> app: main:0x10ad0d5f8
+    .> transport: redis://127.0.0.1:6379/0
+    .> results: redis://127.0.0.1:6379/0
+    .> concurrency: 8 (prefork)
+    .> task events: OFF (enable -E to monitor tasks in this worker)
+
+[queues]
+.> celery exchange=celery(direct) key=celery
+
+[tasks]
+    . main.divide
+```
+
+Now let's send some tasks to Celery worker:
+
+```python
+from main import app, divide
+
+task = divide.delay(1, 2)
+```
+
+What's happenning?
+
+1. We used the `delay` method to send a new message to the message broker. The worker process then picked up and executed the task from the queue.
+2. After releasing from the Enter key, the code finished executing while the `divide` task ran in the background.
+
+```python
+task = divide.delay(1, 2)
+
+print(type(task))
+>>> '<class.result.AsyncResult>'
+```
+
+After we called the delay method, we get an `AsyncResult` instance, which can be used to check the task state along with the return value or exception details.
+
+Add a new task then print `task.state` and `task.result`, we should get something like `PENDING None` at first, but after some time we should see `SUCCESS 0.5`
+
+But what happens if there is an error?
+
+```python
+task = divide.delay(1, 0)
+
+print(task.state, task.result)
+>>> 'FAILURE' ZeroDivisionError('division by zero')
+```
+
+## Monitoring Celery with Flower
+
+Flower is a real-time web applciation monitoring and administrating tool for Celery.
+
+We can spin up the Flower server by:
+
+```bash
+(venv)$ celery -A main.celery flower --port=5555
+```
+
+And if we go to `localhost:5555`, we will see a Flower dashboard, wherece we can get much of feedback about Celery tasks.
+
+# Application Factory
+
+## Init alembeic
+
+```bash
+(venv)$ alembic init alembic
+```
