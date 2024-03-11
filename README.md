@@ -166,9 +166,45 @@ And if we go to `localhost:5555`, we will see a Flower dashboard, where we can g
 
 # Application Factory
 
-## Init alembeic
+## Some Useful Commands
+
+To intialize alembeic:
 
 ```bash
 (venv)$ alembic init alembic
 ```
- 
+
+To create an empty sqlite3:
+
+```bash
+(venv)$ python
+
+>>> from main import app
+>>> from project.database import Base, engine
+>>> Base.metadata.create_all(bind=engine)
+>>> exit()
+
+(venv)ls db.sqlite3
+db.sqlite3
+```
+
+## Definitions
+
+-   `main.py` - uses `create_app` to create a fastapi app
+
+-   `project/__init__.py` - factory function
+
+-   `project/config.py` - fastapi config
+
+-   `project/users` - relevant models and routes for `Users`
+
+## Migrations
+
+```bash
+(venv)$ alembic revision --autogenerate
+(venv)$ alembic upgrade head
+```
+
+## Celery Tasks
+
+Many resources recommend using `celery.task` decorator. This might cause circular imports since you will have to import the Celery instance. We used `celery.shared_task` to make our code reusable, which again, requires `current_app` in `create_celery` instead of creating a new Celery instance. Now, we can copy this file in the app and it will work as expected.
