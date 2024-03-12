@@ -233,3 +233,55 @@ Our `docker-compose.yml` file defines 6 services:
 Live code reloading is a simple yet effective way for developers to get quick feedback on code changes. While Uvicorn provides this functionality out-of-the-box, Celery does not. So, you will have to manually restart the workers every time you make code changes to a task, which can make for a very difficult developer experience.
 
 That is why we are going to use `watchfiles` and embed it to the Celery worker.
+
+# Debugging
+
+## Method 1: Eager Mode
+
+By setting `task_always_eager` to `True`, tasks will be executed immediately (synchronously) instead of being sent to the queue (asynchronously), allowing you to debug the code within the task as you normally would (with breakpoints and print statements and what not) with any other code in your FastAPI app. This mode is recommended for use during testing as well.
+
+It is worth noting that `task_always_eager` is `False` by default to help prevent inadvertently activating it in production.
+
+So, you can add `CELERY_TASK_ALWAYS_EAGER: bool = True` to the FastAPI config to activate it.
+
+This is a great method to start with and to get quick insight into what is happening within the task.
+
+### Pros
+
+You do not need to run the worker, message broker, or result backend processes to debug your code. In other words, you can debug the code within the Uvicorn sever process directly. This greatly simplifies both debugging and testing.
+
+### Cons
+
+With this mode active, `task.delay()` returns `EagerResult` instead of `AsyncResult`, which could mask the actual problem.
+
+## Method 2: PyCharm
+
+If you happen to be using PyCharm, it provides a powerful debug feature.
+
+### Without Docker
+
+If you are not using Docker to run your application locally, then you can follow these steps to help with debugging a Celery task:
+
+1. Make sure the message broker and result backend settings have been configured and that the relevant services are running.
+2. Launch the debugger for FastAPI (you will need to configure this with a Python run config).
+3. Launch the debugger for your Celery worker (you will need to configure this with a Python run config as well).
+
+### With Docker
+
+Based on my experience, if your app is running via Docker, PyCharm can debug the web app just fine but it does not always work correctly with the Celery worker.
+
+## Methods 3: rdb 
+
+`rdb` is a powerful tool that allows you to debug your Celery task directly in your terminal. You must have Telnet installed in order for this to work.
+
+### Pros
+
+You can debug the Celery task in an efficient way without an IDE.
+
+### Cons
+
+It can be difficult for beginners.
+
+### Example
+
+Before we start, ple
