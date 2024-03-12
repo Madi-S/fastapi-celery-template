@@ -227,3 +227,9 @@ Our `docker-compose.yml` file defines 6 services:
 -   `celery_worker` is the Celery worker process
 -   `celery_beat` is the Celery beat process for scheduled tasks
 -   `flower` is the Celery dashboard
+
+# Auto-Reload
+
+Live code reloading is a simple yet effective way for developers to get quick feedback on code changes. While Uvicorn provides this functionality out-of-the-box, Celery does not. So, you will have to manually restart the workers every time you make code changes to a task, which can make for a very difficult developer experience.
+
+That is why we are going to use `watchfiles` and embed it to the Celery worker.

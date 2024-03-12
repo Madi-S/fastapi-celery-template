@@ -7,3 +7,4 @@ SQLAlchemy==1.4.40
 alembic==1.8.1
 tzdata==2024.1
 psycopg2-binary==2.9.3
+watchfiles==0.16.1
