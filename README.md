@@ -208,3 +208,22 @@ db.sqlite3
 ## Celery Tasks
 
 Many resources recommend using `celery.task` decorator. This might cause circular imports since you will have to import the Celery instance. We used `celery.shared_task` to make our code reusable, which again, requires `current_app` in `create_celery` instead of creating a new Celery instance. Now, we can copy this file in the app and it will work as expected.
+
+# Dockerizing Application
+
+Why should we serve up our development environment in Docker containers with Docker Compose?
+
+1. Instead of having to run each process (e.g, Uvicorn/FastAPI, Celery worker, Celery beat, Flower, Redis, Postgres, etc) manually, each from a different terminal window, after we containerize each service, Docker Compose enables us to manage and run the containers using a single command.
+
+2. Docker Compose will also simplify configuration. The Celery config is currently tied to our FastAPI app's config. This is not ideal. With Docker Compose, we can easily create different configurations for both FastAPI and Celery all from a single YAML file.
+
+3. Docker, in general, allows us to create isolated, reproducible, and portable environments. So, you will not have to mess around with a virtual environment or install tools like Postgres and Redis on your local OS.
+
+Our `docker-compose.yml` file defines 6 services:
+
+-   `web` is the FastAPI server
+-   `db` is the Postgres server
+-   `redis` is the Redis service, which will be used as the Celery message broker and result backend
+-   `celery_worker` is the Celery worker process
+-   `celery_beat` is the Celery beat process for scheduled tasks
+-   `flower` is the Celery dashboard
