@@ -27,4 +27,4 @@ async def update_celery_task_status(task_id: str):
         channel=task_id,
         message=json.dumps(get_task_info(task_id))
     )
-    await broadcast.disonnect()
+    await broadcast.disconnect()

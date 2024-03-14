@@ -7,9 +7,6 @@ from celery import shared_task
 from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 
-from project.users.views import api_call
-from project.ws.views import update_celery_task_status
-
 
 logger = get_task_logger(__name__)
 
@@ -24,6 +21,7 @@ def divide(x: int, y: int) -> float:
 
 @shared_task()
 def sample_task(email: str) -> None:
+    from project.users.views import api_call
     api_call(email)
 
 
@@ -40,4 +38,5 @@ def task_process_notification(self):
 
 @task_postrun.connect
 def task_postrun_handler(task_id, **kwargs):
+    from project.ws.views import update_celery_task_status
     async_to_sync(update_celery_task_status)(task_id)
