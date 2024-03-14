@@ -8,3 +8,6 @@ alembic==1.8.1
 tzdata==2024.1
 psycopg2-binary==2.9.3
 watchfiles==0.16.1
+Jinja2==3.1.2
+requests==2.31.0
+email-validator==2.1.1

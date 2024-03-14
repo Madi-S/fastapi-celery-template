@@ -270,7 +270,7 @@ If you are not using Docker to run your application locally, then you can follow
 
 Based on my experience, if your app is running via Docker, PyCharm can debug the web app just fine but it does not always work correctly with the Celery worker.
 
-## Methods 3: rdb 
+## Methods 3: rdb
 
 `rdb` is a powerful tool that allows you to debug your Celery task directly in your terminal. You must have Telnet installed in order for this to work.
 
@@ -282,6 +282,10 @@ You can debug the Celery task in an efficient way without an IDE.
 
 It can be difficult for beginners.
 
-### Example
+# Third-Party Services
 
-Before we start, ple
+Rather than re-building the wheel, you will most likely be using a number of third-party services in your FastAPI application - e.g., Zapier, SendGrid and Stripe, to name a few. Most services expose some sort of RESTful API to call or send notifications to your application via webhooks. If implemented correctly, you can save time and money, which will allow you to speed up the development process. When implementing a new service, it is important that you do not decrease the overall performance of your web application by blocking the main web process.
+
+Client -> FastAPI -> Message Broker -> Worker -> Result Backend
+
+Be sure to handle third-party API calls appropriately in your applications as they can degrade performance. You can handle such calls asynchronously withouth Celery (using threads or asyncio, for example), but Celery can definetely simplify things if you have complicated logic or workflows associated with such third-party API calls. It can also be applied to any time-consuming tasks, such as, resizing images, generating analytical data, creating reports, etc.
