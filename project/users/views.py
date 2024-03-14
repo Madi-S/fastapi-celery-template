@@ -1,14 +1,13 @@
 import random
 import logging
 import requests
-
-from celery.result import AsyncResult
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from project.users import users_router
 from project.users.schemas import UserBody
+from project.celery_utils import get_task_info
 from project.users.tasks import sample_task, task_process_notification
 
 
@@ -35,13 +34,7 @@ def form_example_post(user_body: UserBody):
 
 @users_router.get('/task_status/')
 def task_status(task_id: str):
-    task = AsyncResult(task_id)
-    state = task.state
-    if state == 'FAILURE':
-        error = str(task.result)
-        response = {'state': state, 'error': error}
-    else:
-        response = {'state': state}
+    response = get_task_info(task_id)
     return JSONResponse(response)
 
 
@@ -58,3 +51,8 @@ def webhook_test_async():
     task = task_process_notification.delay()
     logger.debug('Task id: %s', task.id)
     return 'pong'
+
+
+@users_router.get('/form_ws/')
+def form_ws_example(request: Request):
+    return templates.TemplateResponse('form_ws.html', {'request': request})
