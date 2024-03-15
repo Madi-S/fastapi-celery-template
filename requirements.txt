@@ -14,3 +14,5 @@ email-validator==2.1.1
 asgiref==3.5.2
 asyncio-redis==0.16.0
 broadcaster==0.2.0
+aioredis==2.0.1
+python-socketio==5.7.1
