@@ -7,6 +7,8 @@ from celery import shared_task
 from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 
+from project.database import db_context
+
 
 logger = get_task_logger(__name__)
 
@@ -43,6 +45,15 @@ def divide(x: int, y: int) -> float:
     # rdb.set_trace()
     time.sleep(3)
     return x / y
+
+
+@shared_task
+def task_send_welocome_email(user_pk):
+    from project.users.models import User
+
+    with db_context() as session:
+        user = session.query(User).get(user_pk)
+        logger.info('Sent email to %s %s', user.email, user.id)
 
 
 @shared_task()

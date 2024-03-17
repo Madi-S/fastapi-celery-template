@@ -324,3 +324,19 @@ This is implemented with a custom class `BaseTaskWithRetry`, which provides the 
 -   `autoretry_for = (Exception, KeyError)` - what kind of exceptions should trigger retry
 -   `retry_kwargs = {'max_retries': 5}` - maximum amount of retries set to 5 before aborting the task
 -   `retry_backoff = True` - the use of exponential backoff
+
+# Database Transactions
+
+A database transaction is a unit of work that is either commited or rolled back as a unit.
+
+Most databases use the following pattern:
+
+1. Begin the transaction.
+2. Execute a set of data manipulations and/or queries.
+3. If no error occurs, then commit the transaction.
+4. If an error occurs, then roll back the transaction.
+
+In situations where a Celery task needs to work with data from a database, you should always (if possible) enqueue a reference to the data rather than the data itself. For instance, rather than adding an email address, which could change before the task runs, add the user's primary database key. It is almost always better to re-fetch the object from the database when the task is running instead, as using old data may lead to race conditions.
+
+
+

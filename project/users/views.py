@@ -1,12 +1,15 @@
+import string
 import random
 import logging
 import requests
-from fastapi import Request
+from fastapi import Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
 
 from project.users import users_router
 from project.users.schemas import UserBody
+from project.database import get_db_session
 from project.celery_utils import get_task_info
 from project.users.tasks import sample_task, task_process_notification
 
@@ -19,6 +22,26 @@ def api_call(email: str):
     if random.choice((0, 1)):
         raise Exception('Random processing error')
     requests.post('https://httpbin.org/delay/5')
+
+
+def random_username():
+    username = ''.join([random.choice(string.ascii_lowercase) \
+        for _ in range(random.randint(5, 10))])
+
+
+@users_router.get('/transaction_celery/')
+def transaction_celery(session: Session = Depends(get_db_session))
+    try:
+        username = random_username()
+        user = User(username=username, email=f'{username}@gmail.com')
+        session.add(user)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise
+    logger.info('user %s is persistent now', user.id)
+    task_send_welcome_email.delay(user.id)
+    return {'message': 'done'}
 
 
 @users_router.get('/form/')
