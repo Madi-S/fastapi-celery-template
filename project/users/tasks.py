@@ -16,6 +16,21 @@ def task_schedule_work():
     logger.info('task_schedule_work run')
 
 
+@shared_task(name='default:dynamic_example_one')
+def dynamic_example_one():
+    logger.info('Example one')
+
+
+@shared_task(name='low_priority:dynamic_example_two')
+def dynamic_example_two():
+    logger.info('Example two')
+
+
+@shared_task(name='high_priority:dynamic_example_three')
+def dynamic_example_three():
+    logger.info('Example three')
+
+
 @shared_task
 def divide(x: int, y: int) -> float:
     # from celery.contrib import rdb

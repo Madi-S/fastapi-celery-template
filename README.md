@@ -301,3 +301,17 @@ Periodic tasks are tasks that are executed repeatedly at specific time intervals
 In our case periodic tasks are run using Celery Beat, which is a scheduling tool used to enqueue tasks at regular intervals that are executed by Celery Workers.
 
 Celery Workers are responsible for picking up tasks from queue, running them and returning the results. Celery Beat is responsible for sending tasks to the queue based on the defined config. In production, while you can have multiple workers processing tasks from the queue, you should only have a single Celery Beat process. More than one Celery Beat process will result in duplicate tasks being enqueued. In other words, if you schedule a single task and have two Celery Beat processes, two tasks will be enqueued.
+
+# Multiple Queues and Task Routing
+
+By default, Celry creates a default queue in your message broker when it is first executed. Celery then routes all tasks to that default queue, and all Celery Workers consume tasks from that queue as well. Celery allows you to spin up additional queues so you can have more control over which workers process which tasks.
+
+For example, you could configure two queues, `high_priority` and `low_priority`. As the names suggest, "higher" priority tasks could be routed to the `high_priority` queue, while `low_priority` queue handles "lower" priority tasks. You can then spin up two workers: one for the `high_priority` queue and the other one for the `low_priority` queue and default queues.
+
+At any rate, it is a good practice to configure at least one additional queue (two total) so you can route slow tasks to one queue and fast tasks to a different queue so that slow tasks do not block the fast tasks.
+
+To process tasks with low priority:
+
+```bash
+docker-compose run --rm celery_worker celery -A main.celery worker -l info -Q low_priority
+```
