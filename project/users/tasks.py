@@ -11,6 +11,12 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
 
+class BaseTaskWithRetry(celery.Task):
+    autoretry_for = (Exception, KeyError)
+    retry_kwargs = {'max_retries': 5}
+    retry_backoff = True
+
+
 @shared_task(name='task_schedule_work')
 def task_schedule_work():
     logger.info('task_schedule_work run')
@@ -45,15 +51,11 @@ def sample_task(email: str) -> None:
     api_call(email)
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, base=BaseTaskWithRetry)
 def task_process_notification(self):
-    try:
-        if not random.choice((0, 1)):
-            raise Exception()
-        requests.post('https://httpbin.org/delay/5')
-    except Exception as e:
-        logger.error('exception raised, it would be retry after 5 seconds')
-        raise self.retry(exc=e, countdown=5)
+    if not random.choice((0, 1)):
+        raise Exception()
+    requests.post('https://httpbin.org/delay/5')
 
 
 @task_postrun.connect

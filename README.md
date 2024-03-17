@@ -2,6 +2,7 @@
 
 ```bash
 $ git clone https://github.com/Madi-S/fastapi-celery-template
+$ docker-compose up --build -d
 ```
 
 ## Why Celery?
@@ -315,3 +316,11 @@ To process tasks with low priority:
 ```bash
 docker-compose run --rm celery_worker celery -A main.celery worker -l info -Q low_priority
 ```
+
+# Retrying Failed Tasks
+
+This is implemented with a custom class `BaseTaskWithRetry`, which provides the following arguments for retrying the task:
+
+-   `autoretry_for = (Exception, KeyError)` - what kind of exceptions should trigger retry
+-   `retry_kwargs = {'max_retries': 5}` - maximum amount of retries set to 5 before aborting the task
+-   `retry_backoff = True` - the use of exponential backoff
