@@ -289,3 +289,15 @@ Rather than re-building the wheel, you will most likely be using a number of thi
 Client -> FastAPI -> Message Broker -> Worker -> Result Backend
 
 Be sure to handle third-party API calls appropriately in your applications as they can degrade performance. You can handle such calls asynchronously withouth Celery (using threads or asyncio, for example), but Celery can definetely simplify things if you have complicated logic or workflows associated with such third-party API calls. It can also be applied to any time-consuming tasks, such as, resizing images, generating analytical data, creating reports, etc.
+
+# Periodic Tasks
+
+Periodic tasks are tasks that are executed repeatedly at specific time intervals in the bakcground:
+
+-   Generating periodic reports.
+-   Sending batch email notifications.
+-   Running nigthly maintenance jobs.
+
+In our case periodic tasks are run using Celery Beat, which is a scheduling tool used to enqueue tasks at regular intervals that are executed by Celery Workers.
+
+Celery Workers are responsible for picking up tasks from queue, running them and returning the results. Celery Beat is responsible for sending tasks to the queue based on the defined config. In production, while you can have multiple workers processing tasks from the queue, you should only have a single Celery Beat process. More than one Celery Beat process will result in duplicate tasks being enqueued. In other words, if you schedule a single task and have two Celery Beat processes, two tasks will be enqueued.

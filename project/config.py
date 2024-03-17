@@ -18,6 +18,14 @@ class BaseConfig:
     WS_MESSAGE_QUEUE: str = os.environ.get(
         'WS_MESSAGE_QUEUE', 'redis://127.0.0.1:6379/0')
 
+    CELERY_BEAT_SCHEDULE: dict = {
+        'task-schedule-work': {
+            'task': 'task_schedule_work',
+            'schedule': 5.0  # every five seconds
+            # this supports crontab, timedeleta and solar formats
+        }
+    }
+
 
 class DevelopmentConfig(BaseConfig):
     pass

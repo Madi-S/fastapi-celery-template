@@ -11,6 +11,11 @@ from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
 
+@shared_task(name='task_schedule_work')
+def task_schedule_work():
+    logger.info('task_schedule_work run')
+
+
 @shared_task
 def divide(x: int, y: int) -> float:
     # from celery.contrib import rdb
