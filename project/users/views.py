@@ -8,10 +8,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from project.users import users_router
+from project.users.models import User
 from project.users.schemas import UserBody
 from project.database import get_db_session
 from project.celery_utils import get_task_info
-from project.users.tasks import sample_task, task_process_notification
+from project.users.tasks import sample_task, task_process_notification, task_send_welcome_email
 
 
 logger = logging.getLogger(__name__)
@@ -27,10 +28,11 @@ def api_call(email: str):
 def random_username():
     username = ''.join([random.choice(string.ascii_lowercase) \
         for _ in range(random.randint(5, 10))])
+    return username
 
 
 @users_router.get('/transaction_celery/')
-def transaction_celery(session: Session = Depends(get_db_session))
+def transaction_celery(session: Session = Depends(get_db_session)):
     try:
         username = random_username()
         user = User(username=username, email=f'{username}@gmail.com')
@@ -39,7 +41,7 @@ def transaction_celery(session: Session = Depends(get_db_session))
     except Exception as e:
         session.rollback()
         raise
-    logger.info('user %s is persistent now', user.id)
+    logger.info('User %s is persistent now', user.id)
     task_send_welcome_email.delay(user.id)
     return {'message': 'done'}
 

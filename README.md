@@ -337,6 +337,3 @@ Most databases use the following pattern:
 4. If an error occurs, then roll back the transaction.
 
 In situations where a Celery task needs to work with data from a database, you should always (if possible) enqueue a reference to the data rather than the data itself. For instance, rather than adding an email address, which could change before the task runs, add the user's primary database key. It is almost always better to re-fetch the object from the database when the task is running instead, as using old data may lead to race conditions.
-
-
-

@@ -3,7 +3,7 @@ import random
 import requests
 from asgiref.sync import async_to_sync
 
-from celery import shared_task
+from celery import Task, shared_task
 from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 
@@ -13,7 +13,7 @@ from project.database import db_context
 logger = get_task_logger(__name__)
 
 
-class BaseTaskWithRetry(celery.Task):
+class BaseTaskWithRetry(Task):
     autoretry_for = (Exception, KeyError)
     retry_kwargs = {'max_retries': 5}
     retry_backoff = True
