@@ -12,7 +12,12 @@ from project.users.models import User
 from project.users.schemas import UserBody
 from project.database import get_db_session
 from project.celery_utils import get_task_info
-from project.users.tasks import sample_task, task_process_notification, task_send_welcome_email
+from project.users.tasks import (
+    sample_task,
+    task_add_subscription,
+    task_send_welcome_email,
+    task_process_notification
+)
 
 
 logger = logging.getLogger(__name__)
@@ -26,9 +31,32 @@ def api_call(email: str):
 
 
 def random_username():
-    username = ''.join([random.choice(string.ascii_lowercase) \
-        for _ in range(random.randint(5, 10))])
+    username = ''.join([random.choice(string.ascii_lowercase)
+                        for _ in range(random.randint(5, 10))])
     return username
+
+
+@users_router.post('/user_subscription')
+def user_subscription(
+    user_body: UserBody,
+    session: Session = Depends(get_db_session)
+):
+    try:
+        user = session.query(User).filter_by(
+            username=user_body.username).first()
+        if user:
+            user_id = user.id
+        else:
+            user = User(**user_body.dict())
+            session.add(user)
+            session.commit()
+            user_id = user.id
+    except Exception as e:
+        session.rollback()
+        raise
+
+    task_add_subscription.delay(user_id)
+    return {'message': 'successfully sent task to Celery'}
 
 
 @users_router.get('/transaction_celery/')

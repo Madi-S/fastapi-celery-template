@@ -19,6 +19,19 @@ class BaseTaskWithRetry(Task):
     retry_backoff = True
 
 
+@shared_task(bind=True)
+def task_add_subscription(self, user_pk):
+    with db_context() as session:
+        try:
+            from project.users.models import User
+
+            user = session.query(User).get(user_pk)
+            requests.post('https://httpbin.org/delay/5',
+                          data={'email': user.email})
+        except Exception as e:
+            raise self.retry(exc=e)
+
+
 @shared_task(name='task_schedule_work')
 def task_schedule_work():
     logger.info('task_schedule_work run')
@@ -48,7 +61,7 @@ def divide(x: int, y: int) -> float:
 
 
 @shared_task
-def task_send_welocome_email(user_pk):
+def task_send_welcome_email(user_pk):
     from project.users.models import User
 
     with db_context() as session:
