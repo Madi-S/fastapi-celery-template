@@ -14,6 +14,8 @@ def route_task(name, args, kwargs, options, task=None, **kw):
 class BaseConfig:
     BASE_DIR: pathlib.Path = pathlib.Path(__file__).parent.parent
 
+    UPLOADS_DEFAULT_DEST: str = str(BASE_DIR / 'upload')
+
     DATABASE_URL: str = os.environ.get(
         'DATABASE_URL', f'sqlite:///{BASE_DIR}/db.sqlite3')
     DATABASE_CONNECT_DICT: dict = {}
