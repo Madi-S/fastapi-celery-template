@@ -1,8 +1,7 @@
 import factory
-from factory import LazyAttribute, Faker
 
-from project.database import SessionLocal
 from project.users.models import User
+from project.database import SessionLocal
 
 
 class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
@@ -11,6 +10,6 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = SessionLocal()
         sqlalchemy_get_or_create = ('username',)
         sqlalchemy_session_persistence = 'commit'
-    username = Faker('user_name')
+    username = factory.Faker('user_name')
 
-    email = LazyAttribute(lambda o: '%s@example.com' % o.username)
+    email = factory.LazyAttribute(lambda o: '%s@example.com' % o.username)
