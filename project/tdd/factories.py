@@ -1,4 +1,5 @@
 import os
+import random
 import factory
 from PIL import Image
 
@@ -13,14 +14,15 @@ class MemberFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = SessionLocal()
         sqlalchemy_get_or_create = ('username',)
         sqlalchemy_session_persistence = 'commit'
-        username = factory.Faker('user_name')
-        email = factory.LazyAttribute(lambda o: '%s@example.com' % o.username)
+
+    username = factory.Faker('user_name')
+    email = factory.LazyAttribute(lambda o: '%s@example.com' % o.username)
 
     @factory.lazy_attribute
     def avatar(self):
         width = 300
         height = 300
-        color = 'blue'
+        color = random.choice(('red', 'green', 'blue', 'violet', 'yellow'))
         image_format = 'JPEG'
         image_palette = 'RGB'
 

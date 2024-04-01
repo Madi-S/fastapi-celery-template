@@ -24,7 +24,11 @@ def test_view_with_eager_mode(client, db_session, settings, monkeypatch):
     monkeypatch.setattr(requests, 'post', mock_requests_post)
 
     monkeypatch.setattr(
-        settings, 'CELERY_TASK_ALWAYS_EAGER', True, raising=False)
+        settings,
+        'CELERY_TASK_ALWAYS_EAGER',
+        True,
+        raising=False
+    )
 
     user_name = 'michaelyin'
     user_email = f'{user_name}@accordbox.com'
@@ -52,7 +56,7 @@ def test_user_subscribtion_view(client, db_session, settings, monkeypatch, user_
                         'delay', task_add_subscription)
 
     response = client.post(
-        users_router.url_path_for('user_subscribe'),
+        users_router.url_path_for('user_subscription'),
         json={'email': user.email, 'username': user.username}
     )
 
@@ -63,6 +67,4 @@ def test_user_subscribtion_view(client, db_session, settings, monkeypatch, user_
 
     # query from the db again
     user = db_session.query(User).filter_by(username=user.username).first()
-    task_add_subscription.assert_called_with(
-        user.id
-    )
+    task_add_subscription.assert_called_with(user.id)

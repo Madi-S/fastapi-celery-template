@@ -30,7 +30,6 @@ def app(settings):
 @pytest.fixture
 def db_session(app):
     from project.database import Base, engine, SessionLocal
-
     Base.metadata.create_all(bind=engine)
     session = SessionLocal()
     yield session

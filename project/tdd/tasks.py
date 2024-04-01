@@ -11,6 +11,7 @@ from project.tdd.models import Member
 def generate_avatar_thumbnail(member_pk):
     with db_context() as session:
         member = session.query(Member).get(member_pk)
+
         full_path = os.path.join(
             settings.UPLOADS_DEFAULT_DEST,
             member.avatar
@@ -20,10 +21,13 @@ def generate_avatar_thumbnail(member_pk):
             settings.UPLOADS_DEFAULT_DEST,
             thumbnail_path
         )
-        im = Image.open(full_path)
+
         size = (100, 100)
-        im.thumbnail(size)
-        im.save(thumbnail_full_path, 'JPEG')
+
+        image = Image.open(full_path)
+        image.thumbnail(size)
+        image.save(thumbnail_full_path, 'JPEG')
+
         member.avatar_thumbnail = thumbnail_path
         session.add(member)
         session.commit()
