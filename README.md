@@ -385,3 +385,9 @@ $ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod ps
 2. Push them to a container registry.
 3. Run a command to pull the new Docker images from the registry on the droplet (Digital Ocean).
 4. Build the image and restart the containers.
+
+# Monitoring Celery App
+
+Prometheus is an open source solution for event monitoring and alerting. It can work in conjuction with cAdvisor by pulling the metrics data from it. You can then query the data directly from the Prometheus web UI. What is more, Prometheus also provides a powerful and flexible way to configure alerts based on specific events.
+
+Whereas, cAdvisor (Container Advisor) is also an open source solution used for analyzing resource usage and performance data from running containers.

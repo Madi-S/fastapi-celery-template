@@ -14,6 +14,9 @@ done
 >&2 echo 'Celery workers is available'
 
 exec celery flower \
+    --persistent=1 \
+    --db=/app/flower_db/flower.db \
+    --state_save_interval=5000 \
     --app=project.asgi.celery \
     --broker="${CELERY_BROKER_URL}" \
     --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
