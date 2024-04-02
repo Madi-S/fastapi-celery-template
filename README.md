@@ -337,3 +337,45 @@ Most databases use the following pattern:
 4. If an error occurs, then roll back the transaction.
 
 In situations where a Celery task needs to work with data from a database, you should always (if possible) enqueue a reference to the data rather than the data itself. For instance, rather than adding an email address, which could change before the task runs, add the user's primary database key. It is almost always better to re-fetch the object from the database when the task is running instead, as using old data may lead to race conditions.
+
+# Deployment & Production
+
+`docker-compose.prod.yml` is used for deployment. But what is the difference between `docker-compose.yml`, which is used for developement?
+
+The production app uses Nginx as a reverse proxy. For the message broker, we are using RabbitMQ instead of Redis. Environment variables are stored in `./.env/.prod-sample`. Media files are stored in Docker volumes.
+
+Ports specified in Nginx service are the ones it will listen to:
+
+-   80 for FastAPI
+-   5559 for Flower
+-   15672 for RabbitMQ dashboard
+
+For security purposes we added a `fastapi` user and used it to run the entrypoint command. When the image is built, the source is copied over to the image and the appropriate permissions are set. We also created a folder for media files "/app/upload", to prevent any permission issues.
+
+In the development mode, we will still use `main.py` to serve up FastAPI and Celery respectively. On the other hand, in the production mode both FastAPI and Celery will be served up via `project/asgi.py`
+
+To run production ready containers:
+
+```bash
+# Build
+$  docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod up -d --build
+
+# View logs
+$ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod logs -f
+
+# Cleanup
+$ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod stop
+
+# Delete production containers and volumes
+$ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod down -v
+
+# Verify their removal
+$ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod ps
+```
+
+# Continuous Integration
+
+1. Build the new images whenever code is checked in.
+2. Push them to a container registry.
+3. Run a command to pull the new Docker images from the registry on the droplet (Digital Ocean).
+4. Build the image and restart the containers.
