@@ -391,3 +391,38 @@ $ docker-compose -f docker-compose.prod.yml -p fastapi-celery-prod ps
 Prometheus is an open source solution for event monitoring and alerting. It can work in conjuction with cAdvisor by pulling the metrics data from it. You can then query the data directly from the Prometheus web UI. What is more, Prometheus also provides a powerful and flexible way to configure alerts based on specific events.
 
 Whereas, cAdvisor (Container Advisor) is also an open source solution used for analyzing resource usage and performance data from running containers.
+
+# Celery Best Practices
+
+SSL is more secure and thus is highly recommended to use rather than a plain URL.
+
+Prefetch multiplier - Celery's method for prefetching is not very efficient, both dynamically and globally. It can actually cause problems quite often. It is recommended to limit prefetching to one, so that each worker gets only one message at a time.
+
+Celery workers send an acknowledgement back to the message broker after a task is picked up from the queue. The broker will usually respond by removing the task from the queue. This can also cause some problems if the worker for some reason dies while running the task and the task has already been removed from the queue. To adress this, we can configure the message broker to only acknowledge tasks, after the tasks have would be completed.
+
+To prevent tasks from hanging, we can set a soft or hard time limit globally or per task when we define or call the task:
+
+```python
+CELERY_TASK_SOFT_TIME_LIMIT = 15 * 60
+CELERY_TASK_TIME_LIMIT = CELERY_TASK_SOFT_TIME_LIMIT + 30
+```
+
+Specify explicit task names instead of letting Celery generate a name based on the module and the function name. This can help prevent naming issues when using relative imports.
+
+Enqueue a reference to the data instead of the data itself as a parameter to a Celery task, because we do not know when the task is going to be finished, and what can happen to the object passed as a parameter.
+
+Avoid long running tasks. Much better solution is to split a huge task into smaller ones. Tasks should also be idempotent, meaning that a task will not cause unintended effects even if called multiple times with the same parameters.
+
+Last but not least, try to always use json serializer for Celery.
+
+# Saas & PaaS
+
+Some good examples of services, which simplify infrastructure, error handling and monitoring:
+
+-   Heroku: can save a lot of time and money since it handles nearly all of our infrastructure requirements. Plus, it is very easy to scale based on application requirements. It is perfect if you have a small team and your project is not serving a huge amount of traffic.
+
+-   Sentry: aggregates exception info, which can be very helpful with troubleshooting.
+
+-   New Relic: a monitoring solution that can help with finding and analyzing performance bottlenecks.
+
+-   Papertrail:  a logging solution that makes it easy to find and analyze logs of an application.
