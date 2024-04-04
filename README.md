@@ -454,3 +454,134 @@ Notes:
 To limit the connections to the message broker pool, you can set the `broker_pool_limit`.
 
 It is worth noting that if you are using Eventlet or Gevent, you may be able to set broker_pool_limit to `None` or `0` to help limit the number of connections.
+
+# Kumbu
+
+Kumbu is a message library used to make messaging in Python as easy as possible by providing an idiomatic high-level interface for AMQP (Advanced Message Queuing Protocol), and also provide proven and tested solutions to common messaging problems
+
+## Initial Concepts
+
+### Producer
+
+When you send a task to a Celery worker using `delay` or `apply_async` methods, a message is sent to a message broker. This message contains data related to the task like `args`, `kwargs` and `task_id`. The FastAPI application is the Producer.
+
+### Exchange
+
+An Exchange application is a component of a message broker. When a message is sent to a message broker, it is first handled by an Exchange, which routes messages to one or more queues. There are a few different Exchange types, each of which route messages differently.
+
+### Queue
+
+The Queue is a storage for messages.
+
+### Consumer
+
+A Consumer "consumes" (hahaha, takes) messages from the Queue. Celery workers are Consumers.
+
+</hr>
+
+Going back to Kombu, it provides pluggable transports (`kombu.transport.*`) so that non-AMQP transports like Redis can support AMQP. Kombu is installed as a dependency of Celery so you do not need to intall it directly.
+
+Let us look at the following examples to understand Kombu:
+
+```python
+from kombu import Connection, Consumer, Queue, Producer, Exchange
+
+BROKER_URL = 'redis::/redis:6379/1'
+
+queues = (
+    Queue('queue1'),
+    Queue('queue2')
+)
+
+with Connection(BROKER_URL) as conn:
+    with conn.channel() as channel:
+        producer = Producer(channel)
+        producer.publish(
+            {'hello': 'world'},
+            exchange='',
+            routing=queues[0].name
+        )
+```
+
+Here, we used `db 1` as our message broker to avoid conflicting with our Celery application, set the `exchange` to an empty string to deliver message to a specific queue directly and sent the message to `queue1`.
+
+
+```python
+...
+
+def callback(body, message):
+    print('RECEIVED MESSAGE: {0!r}'.format(body))
+    message.ack()
+
+with Connection(BROKER_URL) as conn:
+    with conn.channel() as channel:
+        consumer = Consumer(conn, queues[0], accept=['json'])
+        consumer.register_callback(callback)
+            with consumer:
+                conn.drain_events(timeout=1)
+```
+
+You should see `RECEIVED MESSAGE: {'hello': 'world'}`. The code above consumes the message from the `queue1`, to which we had sent the message previously.
+
+```python
+...
+
+BROKER_URL = 'redis://redis:6379/2
+
+exchange = Exchange('default', type='topic')
+
+queues = (
+    Queue('queue3', exchange=exchange, routing_key='queue3.*'),
+    Queue('queue4', exchange=exchange, routing_key='queue4.*')
+)
+
+with Connection(BROKER_URL) as conn:
+    with conn.channel() as channel:
+        producer = Producer(channel)
+        producer.publish(
+            {'hello': 'world'},
+            exchange=exchange,
+            routing_key='queue3.test',
+            declare=queues
+        )
+```
+
+In the code above, we used `db 2` as our message broker to avoid conflicting with our Celery application, created an `Exchange` with a type of `topic`, used `declare` so the `exchange` can work even if a consumer has not started yet, without this, you will see a `Cannot route message for exchange 'default': Table empty or key no longer exists` error. Topic exchanges match routing keys using dot-separated words. It supports special wild-card charactesrs: `*` matches a single word and `#` matches zero or more words.
+
+So if we check our Redis `db 2`, we will see:
+
+```bash
+127.0.0.1:6379> select 2
+OK
+
+127.0.0.1:6379[2]> keys *
+1) "queue3"
+2) "_kombu.binding.default"
+```
+
+And to run our consumer:
+
+```python
+...
+
+def callback(body, message):
+    print('RECEIVED MESSAGE: {0!r}'.format(body))
+    message.ack()
+
+with Connection(BROKER_URL) as conn:
+    with conn.channel() as channel:
+        consumer = Consumer(conn, queue_ls[0], accept=['json'])
+        consumer.register_callback(callback)
+        with consumer:
+            conn.drain_events(timeout=1)
+```
+
+We will see `RECEIVED MESSAGE: {'hello': 'world'}`, since we consumed the task from `queue3`. If you change the code to consume task from `queue4`, you will not see any messages in the queue.
+
+## Patterns
+
+In most cases, there are two typical patterns you want to use:
+
+1. Do not set `exchange` directly. Instead, use `exchange=''` and set the `routing_key` so the message is sent directly to the queue of our choice.
+
+2. Set the `exchange` to `topic` and use the `routing_key` to send message to the queue of choice.
