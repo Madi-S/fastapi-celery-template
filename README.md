@@ -426,3 +426,31 @@ Some good examples of services, which simplify infrastructure, error handling an
 -   New Relic: a monitoring solution that can help with finding and analyzing performance bottlenecks.
 
 -   Papertrail:  a logging solution that makes it easy to find and analyze logs of an application.
+
+# Performance Tuning
+
+By default, Celery workers use prefork pool to leverage parallelism. It is good, since the majority of tasks are CPU-bound and we can boost their speed by using parallelism. On the other hand, IO-bound operations will not benefit from parallelism but rather from concurrency.
+
+If most of your Celery tasks are IO-bound (network requests, data procession) the prefork model might not work very well. Eventlet and Gevent can help speed things up in this scenario.
+
+Moreover, since memory usage is often high in Celery, we can run into some memory leaks. The quick fix to solve this issue is to use `--max-tasks-per-child` so a worker process will run X number of tasks before it is killed.
+
+We can also run into connection limit (Postgres, Redis, etc) issues. It can be solved by decreasing the amount of workers via `--concurrency` option, or have a look at connection pooling.
+
+With the prefork model, child processes are created. Each process contains one connection to communicate with the results backend and, in some cases, one connection to read/write data from a cache backend like Redis.
+
+So if Celery is running with the prefork model, to limit the number of Redis connections:
+
+1. Decrease the worker concurrency or worker node count
+2. Disable the result backend if you do not need to store the results in your Celery project
+
+If you are leveraging concurrency via eventlet or gevent (i.e., `worker --pool=gevent --concurrency=100`), to limit the number of connections in your Redis pool you can set redis_max_connections.
+
+Notes:
+
+1. This setting only defines the connection limit for the result backend, not the message broker.
+2. If you set the connection limit too low, you will see a lot of `redis.exceptions.ConnectionError: Too many connections` errors, which means you should increase the pool size limit.
+
+To limit the connections to the message broker pool, you can set the `broker_pool_limit`.
+
+It is worth noting that if you are using Eventlet or Gevent, you may be able to set broker_pool_limit to `None` or `0` to help limit the number of connections.
