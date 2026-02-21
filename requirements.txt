@@ -20,6 +20,6 @@ pytest==7.1.2
 factory-boy==3.2.1
 pytest-factoryboy==2.5.0
 pytest-cov==3.0.0
-Pillow==10.3.0
+Pillow==12.1.1
 python-multipart==0.0.18
 gunicorn==23.0.0
