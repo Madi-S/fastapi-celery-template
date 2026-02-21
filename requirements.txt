@@ -9,7 +9,7 @@ tzdata==2024.1
 psycopg2-binary==2.9.3
 watchfiles==0.16.1
 Jinja2==3.1.6
-requests==2.31.0
+requests==2.32.4
 email-validator==2.1.1
 asgiref==3.5.2
 asyncio-redis==0.16.0
